@@ -20,6 +20,11 @@
 ###########################################################
 
 
+
+
+# Script variables
+project_root_dir="$(pwd)"
+
 # check priviledge level ###
 check_priviledge_level () {
     if [ `whoami` != root ]; 
@@ -27,9 +32,6 @@ check_priviledge_level () {
         return 1
     fi
 }
-
-# Script variables
-project_root_dir="$(pwd)"
 
 # check you are in root of JS project
 check_file () { 
@@ -199,10 +201,11 @@ Help()
 
 Headed()
 {
-    echo "Headed"
+    echo "Setting Up Headed (GUI) Chrome Environment"
+    Headed_Environment
 }
 
-Headed_environemnt() {
+Headed_Environment() {
     echo "Headed Environment"
     ##### export chrome_bin
     export CHROME_BIN=/mnt/c/'Program Files'/Google/Chrome/Application/chrome.exe
@@ -215,9 +218,10 @@ Headed_environemnt() {
 
 Headless()
 {
-    echo "Headless"
+    echo "Setting Up Headless Chrome Environment"
+    Headless_Environment
 }
-Headless_environment() {
+Headless_Environment() {
     echo "Headless Environment"
     ##### Start Xvfb (this can go in .bashrc)
     Xvfb -ac :99 -screen 0 1280x1024x16 & export DISPLAY=:99
@@ -259,27 +263,31 @@ then
         echo "invalid flag" 
     fi
 
-
-    # necessary display exports
-    export CHROME_BIN=/mnt/c/'Program Files'/Google/Chrome/Application/chrome.exe
-    export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0
-
-    Xvfb -ac :99 -screen 0 1280x1024x16 & export DISPLAY=:99
-
-    # start VcxSrv
-    cd ~
-    ./vcxsrv.exe :0 -ac -multiwindow -clipboard -wgl > /dev/null 2>&1 &
-
-
 else
     printf "\n\nSetup check. Setup complete."
     printf "\nYou can now run this file with these flags... "
     Help
+    
 fi
 
 
-    # ng serve
-    # ng test
-    # ngx cypress run --browser chrome
-    # npx cypress run --browser chrome --spec cypress/integration/firsttest.spec.js
-    # npx cypress open
+
+
+########### reference notes
+
+
+# # necessary display exports
+# export CHROME_BIN=/mnt/c/'Program Files'/Google/Chrome/Application/chrome.exe
+# export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0
+
+# Xvfb -ac :99 -screen 0 1280x1024x16 & export DISPLAY=:99
+
+# # start VcxSrv
+# cd ~
+# ./vcxsrv.exe :0 -ac -multiwindow -clipboard -wgl > /dev/null 2>&1 &
+
+# ng serve
+# ng test
+# ngx cypress run --browser chrome
+# npx cypress run --browser chrome --spec cypress/integration/firsttest.spec.js
+# npx cypress open
