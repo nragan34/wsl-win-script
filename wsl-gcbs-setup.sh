@@ -150,11 +150,11 @@ then
             echo "./vcxsrv-64.1.20.14.0.installer.exe" > ang_wsl.ps1
             powershell.exe -file ./script.ps1
 
-            # Create sym link in projects root dir
+            # Create sym link in home dir of WSL
+            # this will allow for easy execution of vcxsrv from WSL
             cd ~
-            ln -s /mnt/c/'Program Files'/VcXsrv/vcxsrv.exe &> /dev/null
+            ln -s /mnt/c/'Program Files'/VcXsrv/vcxsrv.exe vcxsrv_link &> /dev/null
         else
-            # Create sym link in projects root dir
             printf "VcxSrv already installed!"
 
 
@@ -163,11 +163,14 @@ then
         # write config stuff to this file
         ####################################
 
-        # # create setup verification
-        # cd $project_root_dir
-        # run_script=".wsl-gcbs-setup-conf"
-        # touch $run_script
-        # echo "setup complete" > $run_script
+        if [ ! -f ".wsl-gcbs-setup-conf" ]
+        then
+            # create setup verification file
+            cd $project_root_dir
+            run_script=".wsl-gcbs-setup-conf"
+            touch $run_script
+            echo "setup complete" > $run_script
+         fi
 
     fi
 
@@ -239,9 +242,13 @@ then
 
     # check for sym link to VcxSrv executable
     cd ~
-    ln -s /mnt/c/'Program Files'/VcXsrv/vcxsrv.exe &> /dev/null
-    echo "$(pwd)"
-    cd $project_root_dir
+    if [ -L ${vcxsrv_link} ] && [ -e ${vcxsrv_link} ]
+    then
+        printf "Sym link to VcXsrv exists"
+    else
+        ln -s /mnt/c/'Program Files'/VcXsrv/vcxsrv.exe vcxsrv_link &> /dev/null
+        cd $project_root_dir
+    fi
 
     # check if param is one of the three
     if [ $# -eq 0 ];
