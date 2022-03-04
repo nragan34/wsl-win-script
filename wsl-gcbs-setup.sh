@@ -51,7 +51,7 @@ continue_script () {
 }
 
 ############################################################
-## Set up environment
+## Install Required Dependencies
 ############################################################
 wsl_gcb_file=$(continue_script ".wsl-gcbs-setup-conf")
 if [[ "$?" -eq 1 ]]; 
@@ -178,7 +178,7 @@ fi
 
 
 ############################################################
-## Set up complete - Script Controller
+## Script Controller
 ############################################################
 
 # flag context
