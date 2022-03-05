@@ -91,9 +91,11 @@ then
     # required bash packages
     dependency_installer wget
     dependency_installer unzip
+    dependency_installer curl 
+    dependency_installer libxi6 
+    dependency_installer libgconf-2-4
     dependency_installer xvfb
-    dependency_installer Xvfb
-
+    dependency_installer x11-apps
 
     # retrieve content from web servers
     get_web_content () {
@@ -208,7 +210,6 @@ fi
 # flag context
 help="flag -h  :  help command to display help context"
 headed="flag --headed   :   sets up GUI environemnt for tests"
-headless="flag --headless  :  sets up headless environment for tests"
 
 # flag functions 
 Help() 
@@ -219,11 +220,10 @@ Help()
     echo "Help:"
     echo "Accepts a single param. Can be: "
     echo
-    echo "Syntax: wsl-gcbs.sh [-h | --headed | --headless]"
+    echo "Syntax: wsl-gcbs.sh [-h | --headed ]"
     echo
     echo "$help"
     echo "$headed"
-    echo "$headless"
     echo
 }
 
@@ -244,19 +244,9 @@ Headed_Environment() {
     cd $project_root_dir
     ##### export chrome_bin
     export CHROME_BIN=/mnt/c/'Program Files'/Google/Chrome/Application/chrome.exe
+    export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0
 }
 
-Headless()
-{
-    echo "Setting Up Headless Chrome Environment"
-    cd $project_root_dir
-    Headless_Environment
-}
-Headless_Environment() {
-    echo "Headless Environment"
-    ##### Start Xvfb (this can go in .bashrc)
-    export CHROME_BIN=/mnt/c/'Program Files'/Google/Chrome/Application/chrome.exe
-    Xvfb -ac :99 -screen 0 1280x1024x16 & export DISPLAY=:99
 }
 
 wsl_gcb_file=$(continue_script ".wsl-gcbs-setup-conf")
@@ -294,10 +284,6 @@ then
     then
         echo "we have an --headed flag"
         Headed
-    elif [ "$1" = "--headless" ];
-    then
-        echo "we have an --headless flag"
-        Headless
     else
         printf "\nInvalid flag! Run with -h for help"
     fi
@@ -329,3 +315,5 @@ fi
 # ngx cypress run --browser chrome
 # npx cypress run --browser chrome --spec cypress/integration/firsttest.spec.js
 # npx cypress open
+
+# to run headlessly - npx cypress run --browser chrome --headless
