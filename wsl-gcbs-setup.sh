@@ -231,6 +231,7 @@ Headed_Environment() {
     export CHROME_BIN=/mnt/c/'Program Files'/Google/Chrome/Application/chrome.exe
     ##### export display 
     export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0
+    Xvfb -ac :99 -screen 0 1280x1024x16 & export DISPLAY=:99
     #### start VcxSrv
     cd ~
     ./vcxsrv_link :0 -ac -multiwindow -clipboard -wgl > /dev/null 2>&1 &
@@ -244,6 +245,7 @@ Headless()
 Headless_Environment() {
     echo "Headless Environment"
     ##### Start Xvfb (this can go in .bashrc)
+    export CHROME_BIN=/mnt/c/'Program Files'/Google/Chrome/Application/chrome.exe
     Xvfb -ac :99 -screen 0 1280x1024x16 & export DISPLAY=:99
 }
 
