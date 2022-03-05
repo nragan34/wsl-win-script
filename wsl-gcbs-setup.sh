@@ -33,6 +33,14 @@ check_priviledge_level () {
     fi
 }
 
+if [ "$(exec sh -c 'echo "$PPID"')" != "$ZSH" ]; 
+then
+    echo you\'re in a ZSH subshell
+elif [ "$(exec sh -c 'echo "$PPID"')" != "$$" ]; 
+then
+    echo you\'re in a Bash subshell
+fi
+
 # check you are in root of JS project
 check_file () { 
     if [ ! -f $1 ];
@@ -223,23 +231,25 @@ Headed()
 {
     echo "Setting Up Headed (GUI) Chrome Environment"
     Headed_Environment
+    ##### export display 
+    ip=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0
+    export DISPLAY=$ip
 }
 
 Headed_Environment() {
     echo "Headed Environment"
-    ##### export chrome_bin
-    export CHROME_BIN=/mnt/c/'Program Files'/Google/Chrome/Application/chrome.exe
-    ##### export display 
-    export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0
-    Xvfb -ac :99 -screen 0 1280x1024x16 & export DISPLAY=:99
     #### start VcxSrv
     cd ~
     ./vcxsrv_link :0 -ac -multiwindow -clipboard -wgl > /dev/null 2>&1 &
+    cd $project_root_dir
+    ##### export chrome_bin
+    export CHROME_BIN=/mnt/c/'Program Files'/Google/Chrome/Application/chrome.exe
 }
 
 Headless()
 {
     echo "Setting Up Headless Chrome Environment"
+    cd $project_root_dir
     Headless_Environment
 }
 Headless_Environment() {
