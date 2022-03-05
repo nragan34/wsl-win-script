@@ -59,7 +59,7 @@ then
 
      # null check to proceed or exit
     package_json_file=$(continue_script "package.json")
-    if [ "$?" -eq 1 ]
+    if [[ "$?" -eq 1 ]]
     then
         echo "You are not in your project root. Exiting script... "
         exit
@@ -103,7 +103,7 @@ then
         }
 
     
-    if [ ! -x "$(command -v google-chrome)" ] && [ ! -x "$(command -v chromedriver)" ];
+    if [[ ! -x "$(command -v google-chrome)" ]] && [[ ! -x "$(command -v chromedriver)" ]];
     then
         # install chrome
         chrome="https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
@@ -146,34 +146,50 @@ then
             wget --trust-server-names https://sourceforge.net/projects/vcxsrv/files/latest/download
 
             # Create shell script and run
-            touch ang_wsl.ps1 
-            echo "./vcxsrv-64.1.20.14.0.installer.exe" > ang_wsl.ps1
-            powershell.exe -file ./script.ps1
+
+            { # try
+
+                touch ang_wsl.ps1 
+                echo "./vcxsrv-64.1.20.14.0.installer.exe" > ang_wsl.ps1
+                echo
+                echo "try to run script... "
+                echo "$(pwd)"
+                powershell.exe -File ./ang_wsl.ps1 
+
+            } || { # catch
+                # abort script something went wront 
+                echo "Abort.. we failed at Vcxsrv"
+                exit
+            }
+
 
             # Create sym link in home dir of WSL
             # this will allow for easy execution of vcxsrv from WSL
             cd ~
+            printf "\nCreating sym link to VcXsrv... "
             ln -s /mnt/c/'Program Files'/VcXsrv/vcxsrv.exe vcxsrv_link &> /dev/null
+            printf "\nLink created... "
         else
             printf "VcxSrv already installed!"
 
-
-        ####################################
-        # setup verification conf file
-        # write config stuff to this file
-        ####################################
-
-        if [ ! -f ".wsl-gcbs-setup-conf" ]
-        then
-            # create setup verification file
-            cd $project_root_dir
-            run_script=".wsl-gcbs-setup-conf"
-            touch $run_script
-            echo "setup complete" > $run_script
-         fi
-
     fi
-
+else
+    echo "Setup check complete"
+fi
+####################################
+# setup verification conf file
+# write config stuff to this file
+####################################
+cd $project_root_dir
+if [ ! -f ".wsl-gcbs-setup-conf" ]
+then
+    # create setup verification file
+    run_script=".wsl-gcbs-setup-conf"
+    touch $run_script
+    echo "setup complete" > $run_script
+else
+    printf "\n\n\nWe found .wsl-gcbs-setup-conf!\n"
+    
 fi
 
 
@@ -191,8 +207,9 @@ Help()
 {
     # Display Help
     echo
-    echo
-    echo "Will accept a single param"
+    echo 
+    echo "Help:"
+    echo "Accepts a single param. Can be: "
     echo
     echo "Syntax: wsl-gcbs.sh [-h | --headed | --headless]"
     echo
@@ -216,7 +233,7 @@ Headed_Environment() {
     export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0
     #### start VcxSrv
     cd ~
-    ./vcxsrv.exe :0 -ac -multiwindow -clipboard -wgl > /dev/null 2>&1 &
+    ./vcxsrv_link :0 -ac -multiwindow -clipboard -wgl > /dev/null 2>&1 &
 }
 
 Headless()
@@ -231,12 +248,14 @@ Headless_Environment() {
 }
 
 wsl_gcb_file=$(continue_script ".wsl-gcbs-setup-conf")
-if [ "$?" -eq 0 ] && [ grep -q -e "setup complete" -e .wsl-gcbs-setup-conf ]
+if [ "$?" -eq 0 ] && grep "setup complete" .wsl-gcbs-setup-conf
 then
 
     # this script can only be run in root project directory
-    if [[ ! $(proj_root_check) ]]
+    project_root_check=$(continue_script "package.json")
+    if [ ! "$?" -eq 0 ]
     then
+        echo "package.json not found... exiting... "
         exit
     fi
 
@@ -244,7 +263,7 @@ then
     cd ~
     if [ -L ${vcxsrv_link} ] && [ -e ${vcxsrv_link} ]
     then
-        printf "Sym link to VcXsrv exists"
+        printf "Sym link check. VcXsrv exists!\n"
     else
         ln -s /mnt/c/'Program Files'/VcXsrv/vcxsrv.exe vcxsrv_link &> /dev/null
         cd $project_root_dir
@@ -253,21 +272,22 @@ then
     # check if param is one of the three
     if [ $# -eq 0 ];
     then
-        echo "No argument supplied... "
+        echo "No argument supplied... Run with -h for help"
+        
     elif [ "$1" = "-h" ];
     then
         echo "we have an -h flag"
-        $(Help)
+        Help
     elif [ "$1" = "--headed" ];
     then
         echo "we have an --headed flag"
-        $(Headed)
+        Headed
     elif [ "$1" = "--headless" ];
     then
         echo "we have an --headless flag"
-        $(Headless)
+        Headless
     else
-        echo "invalid flag" 
+        printf "\nInvalid flag! Run with -h for help"
     fi
 
 else
@@ -276,7 +296,6 @@ else
     Help
     
 fi
-
 
 
 
