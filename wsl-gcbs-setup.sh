@@ -16,7 +16,12 @@
 ###########################################################
 # 1.) Place this script in the root directory of your JS project
 # 2.) Make sure it is executable:  chome +x wsl-gcbs.sh
-# 3.) Run as root or with sudo: sudo wsl-gcbs.sh
+# 3.) Must run script as source. 
+#     Example:      source ./wsl-gcbs-setup.sh    or     . ./wsl-gcbs-setup.sh
+#  If you run a script without (source or .), the script
+# will start as a sub-shell instead of a parent shell. When a sub-shell is activated
+# the exports will only exists as long as the sub-shell is processing. Therefore, if you want
+# the exports to persists after execution, you need to make sure this script runs in a parent shell.
 ###########################################################
 
 
@@ -210,6 +215,7 @@ fi
 # flag context
 help="flag -h  :  help command to display help context"
 headed="flag --headed   :   sets up GUI environemnt for tests"
+uninstall_packages="flag -u  :  uninstall chrome-browser, chromedriver, xvfb and x11-apps"
 
 # flag functions 
 Help() 
@@ -224,6 +230,7 @@ Help()
     echo
     echo "$help"
     echo "$headed"
+    echo "$uninstall_packages"
     echo
 }
 
@@ -241,11 +248,25 @@ Headed_Environment() {
     #### start VcxSrv
     cd ~
     ./vcxsrv_link :0 -ac -multiwindow -clipboard -wgl > /dev/null 2>&1 &
+    cd /mnt/c && mkdir tmp
     cd $project_root_dir
     ##### export chrome_bin
-    export CHROME_BIN=/mnt/c/'Program Files'/Google/Chrome/Application/chrome.exe
+    # export CHROME_BIN=/mnt/c/'Program Files'/Google/Chrome/Application/chrome.exe
+    export CHROME_BIN=/usr/bin/google-chrome
     export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0
 }
+
+Uninstall()
+{
+    echo "Uninstall all installed packages this script installed to your WSL distro"
+    Uninstall_Clean
+    ##### export display 
+    ip=:0
+    export DISPLAY=$ip
+}
+
+Uninstall_Clean() {
+    echo "Clean up starting... "
 
 }
 
@@ -275,12 +296,15 @@ then
     if [ $# -eq 0 ];
     then
         echo "No argument supplied... Run with -h for help"
-        
     elif [ "$1" = "-h" ];
     then
         echo "we have an -h flag"
         Help
     elif [ "$1" = "--headed" ];
+    then
+        echo "we have an --headed flag"
+        Headed
+        elif [ "$1" = "-u" ];
     then
         echo "we have an --headed flag"
         Headed
