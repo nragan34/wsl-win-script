@@ -16,9 +16,10 @@
 ###########################################################
 # 1.) Place this script in the root directory of your JS project
 # 2.) Make sure it is executable:  chome +x wsl-gcbs.sh
-# 3.) Must run script as source. 
-#     Example:      source ./wsl-gcbs-setup.sh    or     . ./wsl-gcbs-setup.sh
-#  If you run a script without (source or .), the script
+#
+# *3.) Must run script as source
+# * source ./wsl-gcbs-setup.sh or . ./wsl-gcbs-setup.sh
+# If you run a script without (source or .), the script
 # will start as a sub-shell instead of a parent shell. When a sub-shell is activated
 # the exports will only exists as long as the sub-shell is processing. Therefore, if you want
 # the exports to persists after execution, you need to make sure this script runs in a parent shell.
@@ -29,6 +30,41 @@
 
 # Script variables
 project_root_dir="$(pwd)"
+wsl_root=~
+
+#*******************************************************************************
+# The problem - when running this script through the VS-Code terminal, the shell kicks off
+# as a sub-shell. This is probably due to the way VS-Code has configured their terminal to work.
+# When a subshell is started, the exports in this script only last as long as the script process runs,
+# and do not persist to the main environemtn. I have found that running this script with [source] or [.]
+# before the script name like this:::: [source ./wsl-gcbs-setup] or [. ./wsl-gcbs-setup] works. 
+# What also works is executing this script outside of VS-Code in the Ubuntu terminal, but we can't 
+# rely on users remembering to do this
+#
+# Testing stuff - trying to catch whether shell has been executed as parent or subshell
+# If I can find this out, I may be able to re-run script with command [source ./wsl-gcbs-setup]
+# and fork off a new execution of this script as a parent shell process, then kill the original.
+# This way the user wont be forces to execute the script as [source ./wsl-gcbs-setup] and they
+# can execute it as [./wsl-gcbs-setup]
+#*******************************************************************************
+echo "Script is: $0 running using $$ PID"
+echo "Current shell used within the script is: `readlink /proc/$$/exe`"
+
+script_shell="$(readlink /proc/$$/exe | sed "s/.*\///")"
+
+echo
+echo ${script_shell}
+echo
+echo "process $$"
+ps -p $$
+
+echo -e "\nSHELL is = ${script_shell}\n" 
+
+if [[ ! "${script_shell}" == "bash" ]]
+then
+    echo -e "I'm Parent BASH Shell\n" # this will only show if process is parent shell. 
+fi
+#*******************************************************************************
 
 # check priviledge level ###
 check_priviledge_level () {
@@ -116,7 +152,6 @@ then
             printf "\n"
         fi
         }
-
     
     if [[ ! -x "$(command -v google-chrome)" ]] && [[ ! -x "$(command -v chromedriver)" ]];
     then
@@ -138,11 +173,9 @@ then
     fi
 
 
-
     ####################################
     # install VcxSrv on the windows side 
     ####################################
-
     # Get and clean Windows username from WSL
     username2="$(powershell.exe '$env:UserName')"
     remove_carriage_return () {
@@ -180,7 +213,7 @@ then
 
             # Create sym link in home dir of WSL
             # this will allow for easy execution of vcxsrv from WSL
-            cd ~
+            cd $wsl_root
             printf "\nCreating sym link to VcXsrv... "
             ln -s /mnt/c/'Program Files'/VcXsrv/vcxsrv.exe vcxsrv_link &> /dev/null
             printf "\nLink created... "
@@ -191,6 +224,8 @@ then
 else
     echo "Setup check complete"
 fi
+
+
 ####################################
 # setup verification conf file
 # write config stuff to this file
@@ -211,7 +246,6 @@ fi
 ############################################################
 ## Script Controller
 ############################################################
-
 # flag context
 help="flag -h  :  help command to display help context"
 headed="flag --headed   :   sets up GUI environemnt for tests"
@@ -246,7 +280,7 @@ Headed()
 Headed_Environment() {
     echo "Headed Environment"
     #### start VcxSrv
-    cd ~
+    cd $wsl_root
     ./vcxsrv_link :0 -ac -multiwindow -clipboard -wgl > /dev/null 2>&1 &
     cd /mnt/c && mkdir tmp
     cd $project_root_dir
@@ -267,7 +301,8 @@ Uninstall()
 
 Uninstall_Clean() {
     echo "Clean up starting... "
-
+    apt list --installed
+    sudo apt-get remove --purge 
 }
 
 wsl_gcb_file=$(continue_script ".wsl-gcbs-setup-conf")
@@ -283,7 +318,7 @@ then
     fi
 
     # check for sym link to VcxSrv executable
-    cd ~
+    cd $wsl_root
     if [ -L ${vcxsrv_link} ] && [ -e ${vcxsrv_link} ]
     then
         printf "Sym link check. VcXsrv exists!\n"
@@ -320,7 +355,6 @@ else
 fi
 
 
-
 ########### reference notes
 
 
@@ -331,7 +365,7 @@ fi
 # Xvfb -ac :99 -screen 0 1280x1024x16 & export DISPLAY=:99
 
 # # start VcxSrv
-# cd ~
+# cd $wsl_root
 # ./vcxsrv.exe :0 -ac -multiwindow -clipboard -wgl > /dev/null 2>&1 &
 
 # ng serve
