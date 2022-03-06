@@ -31,13 +31,11 @@ if [ "$0" = "$BASH_SOURCE" ]
 then
     echo "Script is: $0 running using $$ PID"
     echo
-    echo "Script Not Sourced. Please run script as follows:"
-    echo
-    echo "source ./wsl-gcbs-setup.sh"
+    echo -e "\e[31mScript Not Sourced.\e[0m Please run script as follows:" 
+    echo -e "\e[32msource ./wsl-gcbs-setup.sh\e[0m"
 else
     echo "Script is: $0 running using $$ PID"
-    echo
-    echo "Script sourced. Starting... "
+    
 
     # Script variables
     project_root_dir="$(pwd)"
@@ -47,7 +45,7 @@ else
     check_file () { 
         if [ ! -f $1 ];
         then
-            return 1 # flase
+            return 1 # false
         fi
     }
 
